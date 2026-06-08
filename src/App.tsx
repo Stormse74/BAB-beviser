@@ -7,7 +7,8 @@ import {
   RefreshCw,
   ShieldCheck,
   Trash2,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { DocumentViewer } from "./components/DocumentViewer";
@@ -184,10 +185,14 @@ function App() {
                   className={`action-row ${dates.status}`}
                   onClick={() => setSelectedId(document.id)}
                 >
-                  <span>{dates.status === "red" ? "Rød" : dates.status === "yellow" ? "Gul" : "Grøn"}</span>
+                  <span>
+                    {dates.status === "red" ? "Rød" : dates.status === "yellow" ? "Gul" : "Grøn"}
+                  </span>
                   <strong>{definition?.title}</strong>
                   <span>
-                    {definition?.kind === "driver" ? "bestilles senest" : "bestil opfølgning senest"}{" "}
+                    {definition?.kind === "driver"
+                      ? "bestilles senest"
+                      : "bestil opfølgning senest"}{" "}
                     {formatDate(dates.orderBy)}
                   </span>
                 </button>
@@ -240,15 +245,20 @@ function App() {
 }
 
 function WebsiteIntro() {
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
   return (
     <section className="website-intro">
       <div className="intro-copy">
         <p className="eyebrow">Installerbar app</p>
-        <h2>Gem dine BAB-beviser på telefonen</h2>
+        <h2>Installer BAB Beviser på telefonen</h2>
         <p>
           Appen kan installeres på telefon eller tablet, virker offline efter installation og
           gemmer beviser, billeder, datoer og backupdata lokalt på din egen enhed.
         </p>
+        <button className="install-help-button" onClick={() => setShowInstallGuide(true)}>
+          Sådan installerer du appen
+        </button>
       </div>
       <div className="intro-grid">
         <div>
@@ -268,24 +278,57 @@ function WebsiteIntro() {
         </div>
       </div>
       <div className="install-guides">
-        <div>
-          <h3>Android</h3>
-          <ol>
-            <li>Åbn siden i Chrome</li>
-            <li>Tryk på de tre prikker</li>
-            <li>Vælg Installer app eller Føj til startskærm</li>
-          </ol>
-        </div>
-        <div>
-          <h3>iPhone/iPad</h3>
-          <ol>
-            <li>Åbn siden i Safari</li>
-            <li>Tryk Del</li>
-            <li>Vælg Føj til hjemmeskærm</li>
-          </ol>
-        </div>
+        <InstallGuide />
       </div>
+      {showInstallGuide && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setShowInstallGuide(false)}
+        >
+          <div
+            className="install-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3 id="install-modal-title">Installer BAB Beviser på telefonen</h3>
+              <button aria-label="Luk" onClick={() => setShowInstallGuide(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="install-guides modal-guides">
+              <InstallGuide />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
+  );
+}
+
+function InstallGuide() {
+  return (
+    <>
+      <div>
+        <h3>Android</h3>
+        <ol>
+          <li>Åbn siden i Chrome</li>
+          <li>Tryk på de tre prikker</li>
+          <li>Vælg Installer app eller Føj til startskærm</li>
+        </ol>
+      </div>
+      <div>
+        <h3>iPhone/iPad</h3>
+        <ol>
+          <li>Åbn siden i Safari</li>
+          <li>Tryk på Del</li>
+          <li>Vælg Føj til hjemmeskærm</li>
+        </ol>
+      </div>
+    </>
   );
 }
 

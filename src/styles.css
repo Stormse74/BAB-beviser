@@ -186,6 +186,55 @@ h3 {
   padding-left: 1.3rem;
 }
 
+.install-help-button {
+  margin-top: 0.4rem;
+}
+
+.modal-backdrop {
+  align-items: center;
+  background: rgba(10, 18, 16, 0.55);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 20;
+}
+
+.install-modal {
+  background: #f7f5ef;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  max-height: min(88vh, 680px);
+  max-width: 720px;
+  overflow: auto;
+  padding: 1rem;
+  width: min(100%, 720px);
+}
+
+.modal-header {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.modal-header h3 {
+  font-size: 1.35rem;
+  margin-bottom: 0;
+}
+
+.modal-header button {
+  min-height: 40px;
+  padding: 0.45rem;
+  width: 40px;
+}
+
+.modal-guides {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
 .document-tabs {
   display: grid;
   gap: 0.65rem;
