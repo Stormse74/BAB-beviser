@@ -394,12 +394,24 @@ h3 {
   width: 38px;
 }
 
-.document-viewport {
+.document-viewer {
   height: min(72vh, 760px);
   overflow: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem;
-  touch-action: pan-x pan-y;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  width: 100%;
+}
+
+.document-viewer * {
+  touch-action: none;
+}
+
+.document-content {
+  transform-origin: 0 0;
 }
 
 .pdf-pages {
@@ -410,6 +422,10 @@ h3 {
   min-width: max-content;
 }
 
+.image-content {
+  position: relative;
+}
+
 .pdf-page {
   background: #ffffff;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
@@ -418,9 +434,11 @@ h3 {
 
 .zoomed-image {
   display: block;
-  margin: 0 auto;
-  max-width: 100%;
-  transform-origin: top center;
+  left: 0;
+  max-width: none;
+  position: absolute;
+  top: 0;
+  transform-origin: 0 0;
 }
 
 .empty-viewer {
@@ -481,7 +499,7 @@ h3 {
     columns: 1;
   }
 
-  .document-viewport {
+  .document-viewer {
     height: 62vh;
     padding: 0.7rem;
   }
