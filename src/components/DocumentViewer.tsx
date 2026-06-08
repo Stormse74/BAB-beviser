@@ -1,6 +1,5 @@
 import { ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { RefObject } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import type { StoredDocument } from "../types";
 
@@ -34,27 +33,30 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
   return (
     <div className="viewer-shell">
       <div className="viewer-toolbar">
-        <span>{document.fileName || "Gemt bevis"}</span>
-        <div>
+        <div className="viewer-title">
+          <span>{document.fileName || "Gemt bevis"}</span>
+          <small>Brug + og - til at zoome i beviset.</small>
+        </div>
+        <div className="zoom-controls" aria-label="Zoom">
           <button
             aria-label="Zoom ud"
             onClick={() => setZoom((value) => Math.max(0.6, value - 0.2))}
           >
-            <ZoomOut size={18} />
+            <ZoomOut size={24} />
           </button>
           <output>{Math.round(zoom * 100)}%</output>
           <button
             aria-label="Zoom ind"
-            onClick={() => setZoom((value) => Math.min(3, value + 0.2))}
+            onClick={() => setZoom((value) => Math.min(3.4, value + 0.2))}
           >
-            <ZoomIn size={18} />
+            <ZoomIn size={24} />
           </button>
         </div>
       </div>
       {isPdf ? (
-        <PdfViewer dataUrl={document.dataUrl} zoom={zoom} setZoom={setZoom} />
+        <PdfViewer dataUrl={document.dataUrl} zoom={zoom} />
       ) : (
-        <ImageViewer dataUrl={document.dataUrl} zoom={zoom} setZoom={setZoom} />
+        <ImageViewer dataUrl={document.dataUrl} zoom={zoom} />
       )}
     </div>
   );
@@ -63,18 +65,14 @@ export function DocumentViewer({ document }: DocumentViewerProps) {
 interface ZoomProps {
   dataUrl: string;
   zoom: number;
-  setZoom: (updater: number | ((value: number) => number)) => void;
 }
 
-function ImageViewer({ dataUrl, zoom, setZoom }: ZoomProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
+function ImageViewer({ dataUrl, zoom }: ZoomProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageSize, setImageSize] = useState({ width: 1, height: 1 });
 
-  useDocumentGestures(viewportRef, setZoom);
-
   return (
-    <div ref={viewportRef} className="document-viewer">
+    <div className="document-viewer">
       <div
         className="document-content image-content"
         style={{
@@ -106,13 +104,10 @@ function ImageViewer({ dataUrl, zoom, setZoom }: ZoomProps) {
   );
 }
 
-function PdfViewer({ dataUrl, zoom, setZoom }: ZoomProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
+function PdfViewer({ dataUrl, zoom }: ZoomProps) {
   const [pages, setPages] = useState<number[]>([]);
   const [error, setError] = useState("");
   const binary = useMemo(() => dataUrlToUint8Array(dataUrl), [dataUrl]);
-
-  useDocumentGestures(viewportRef, setZoom);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,7 +130,7 @@ function PdfViewer({ dataUrl, zoom, setZoom }: ZoomProps) {
   if (error) return <div className="empty-viewer">{error}</div>;
 
   return (
-    <div ref={viewportRef} className="document-viewer">
+    <div className="document-viewer">
       <div className="document-content pdf-pages">
         {pages.length === 0 && <span>Indlæser PDF...</span>}
         {pages.map((pageNumber) => (
@@ -187,88 +182,6 @@ function PdfPage({
   return <canvas ref={canvasRef} className="pdf-page" aria-label={`PDF side ${pageNumber}`} />;
 }
 
-function useDocumentGestures(
-  viewportRef: RefObject<HTMLDivElement>,
-  setZoom: (updater: number | ((value: number) => number)) => void
-) {
-  const pinchDistanceRef = useRef<number | null>(null);
-  const panRef = useRef<{
-    x: number;
-    y: number;
-    scrollLeft: number;
-    scrollTop: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const preventGesture = (event: Event) => {
-      event.preventDefault();
-    };
-
-    const onTouchStart = (event: globalThis.TouchEvent) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-        pinchDistanceRef.current = getTouchDistance(event);
-        panRef.current = null;
-        return;
-      }
-
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        panRef.current = {
-          x: touch.clientX,
-          y: touch.clientY,
-          scrollLeft: viewport.scrollLeft,
-          scrollTop: viewport.scrollTop
-        };
-      }
-    };
-
-    const onTouchMove = (event: globalThis.TouchEvent) => {
-      if (event.touches.length === 2 && pinchDistanceRef.current) {
-        event.preventDefault();
-        const distance = getTouchDistance(event);
-        const delta = distance / pinchDistanceRef.current;
-        pinchDistanceRef.current = distance;
-        setZoom((value) => Math.min(3, Math.max(0.6, value * delta)));
-        return;
-      }
-
-      if (event.touches.length === 1 && panRef.current) {
-        event.preventDefault();
-        const touch = event.touches[0];
-        viewport.scrollLeft = panRef.current.scrollLeft + panRef.current.x - touch.clientX;
-        viewport.scrollTop = panRef.current.scrollTop + panRef.current.y - touch.clientY;
-      }
-    };
-
-    const onTouchEnd = () => {
-      pinchDistanceRef.current = null;
-      panRef.current = null;
-    };
-
-    viewport.addEventListener("touchstart", onTouchStart, { passive: false });
-    viewport.addEventListener("touchmove", onTouchMove, { passive: false });
-    viewport.addEventListener("touchend", onTouchEnd, { passive: false });
-    viewport.addEventListener("touchcancel", onTouchEnd, { passive: false });
-    viewport.addEventListener("gesturestart", preventGesture, { passive: false });
-    viewport.addEventListener("gesturechange", preventGesture, { passive: false });
-    viewport.addEventListener("gestureend", preventGesture, { passive: false });
-
-    return () => {
-      viewport.removeEventListener("touchstart", onTouchStart);
-      viewport.removeEventListener("touchmove", onTouchMove);
-      viewport.removeEventListener("touchend", onTouchEnd);
-      viewport.removeEventListener("touchcancel", onTouchEnd);
-      viewport.removeEventListener("gesturestart", preventGesture);
-      viewport.removeEventListener("gesturechange", preventGesture);
-      viewport.removeEventListener("gestureend", preventGesture);
-    };
-  }, [setZoom, viewportRef]);
-}
-
 function dataUrlToUint8Array(dataUrl: string) {
   const base64 = dataUrl.split(",")[1] || "";
   const binary = atob(base64);
@@ -277,9 +190,4 @@ function dataUrlToUint8Array(dataUrl: string) {
     bytes[index] = binary.charCodeAt(index);
   }
   return bytes;
-}
-
-function getTouchDistance(event: globalThis.TouchEvent) {
-  const [first, second] = [event.touches[0], event.touches[1]];
-  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
 }
